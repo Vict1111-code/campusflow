@@ -21,14 +21,14 @@ Both feature branches → reciprocal PR reviews → approved merges → integrat
 - Read PRD and owner documents together.
 - Open GitHub Issues for creation/validation/priority, storage/CLI, assignment/lifecycle, queue/reports and tests.
 - Agree on ticket container, function signatures, return values, exception policy, save triggers, next-ID strategy and reopen semantics.
-- Write `docs/design-decisions.md` before parallel implementation.
+- Write `doc/design-decisions.md` before parallel implementation.
 - Evidence: issue links and signed-off decisions.
 
 ## Phase 3 · 00:50–01:30 · AI learning
 - Each fellow chooses two uncertain concepts and performs two small independent experiments unrelated to CampusFlow.
 - Record actual prompt, prediction, experiment, observed result and explanation.
 - During coding add a third verified interaction; at least one must critically improve or reject AI guidance.
-- Evidence: individual entries in `docs/ai-learning-log.md`.
+- Evidence: individual entries in `doc/ai-learning-log.md`.
 
 ## Phase 4 · 01:30–03:55 · Parallel implementation
 ### Victor (larger/harder scope)

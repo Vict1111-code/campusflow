@@ -8,7 +8,7 @@ Support a two-person, six-hour educational Python engineering sprint. Be a tutor
 ## Source of truth and precedence
 1. Original Learn2Earn Fellows' Engineering Guide supplied by the team.
 2. `PRD.md` for feature behavior.
-3. `docs/design-decisions.md` for team-approved contracts.
+3. `doc/design-decisions.md` for team-approved contracts.
 4. `vejehpart.md` and `gideonpart.md` for file ownership.
 5. `IMPLEMENTATION_ROADMAP.md` for sequencing.
 
