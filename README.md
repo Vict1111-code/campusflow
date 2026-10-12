@@ -1,61 +1,79 @@
 # CampusFlow — Campus IT Helpdesk CLI
 
-**Learn2Earn AI-Native Engineering Sprint** · Python standard library · Two fellows · Six-hour challenge
+**Learn2Earn AI-Native Engineering Sprint** · Python standard library · Two fellows
 
-CampusFlow is a command-line helpdesk for recording technical incidents, calculating priority, assigning staff, tracking resolution, viewing work queues and reports, and persisting tickets to JSON.
+CampusFlow is a working Python command-line helpdesk for recording technical incidents, calculating priority, assigning staff, tracking resolution, viewing queues and reports, and persisting tickets to JSON.
 
-> Status: planning/documentation. Features and tests described below are acceptance targets, **not claims of completed implementation**.
+## Quick start
 
-## Start here
-1. Read [PRD.md](PRD.md) for exact product rules and acceptance criteria.
-2. Read [IMPLEMENTATION_ROADMAP.md](IMPLEMENTATION_ROADMAP.md) for milestones and dependencies.
-3. Read [AGENT.md](AGENT.md) (and [AGENTS.md](AGENTS.md)) before using coding agents.
-4. Victor: [vejehpart.md](vejehpart.md). Gideon: [gideonpart.md](gideonpart.md).
-5. Agree on interfaces in `docs/design-decisions.md` before writing code.
+Requires Python 3.10+; no third-party dependencies.
 
-## Proposed repository structure
+```bash
+python3 main.py
+```
+
+The interactive menu supports creating, listing, viewing, assigning, starting, resolving, and reopening tickets, displaying the open priority queue and reports, and exiting. Changes are saved to `data/tickets.json` after each successful mutation; the file is loaded at startup. Do not commit this local data file.
+
+## Run tests
+
+```bash
+python3 -m unittest discover -s tests -v
+```
+
+**Verification:** Vejeh supplied terminal output on 2026-10-12 showing **84 tests passed** after adding the CLI and integration tests. This is local test evidence, not a claim that GitHub CI has run.
+
+## Project layout
+
 ```text
-main.py
+main.py                    # CLI and persistence orchestration
 campusflow/
   __init__.py
-  tickets.py
-  workflow.py
-  storage.py
-  reports.py
+  tickets.py               # Validation, priority, creation, ticket IDs
+  workflow.py              # Assignment, transitions, open queue
+  reports.py               # Summary counts
+  storage.py               # JSON loading, validation, atomic replacement
 tests/
   test_tickets.py
-  test_workflow.py
   test_storage.py
-  test_reports.py
+  test_workflow.py
+  test_report.py
+  test_cli.py
+PRD.md
+IMPLEMENTATION_ROADMAP.md
+AGENT.md
+AGENTS.md
+vejehpart.md
+gideonpart.md
 docs/
   design-decisions.md
   ai-learning-log.md
 ```
-This is the proposed target structure, not a claim that these files exist.
 
-## Runtime (once implemented)
-- Python 3.10+ recommended; standard library only.
-- Run: `python main.py`
-- Test: `python -m unittest discover -s tests -v`
-- Local ticket data: `data/tickets.json` (excluded from Git).
+## Ticket schema
 
-## Features
-1. Create validated tickets with IDs and deterministic priority.
-2. List tickets and inspect one by ID.
-3. Assign a ticket to a nonblank staff name.
-4. Enforce open → in_progress → resolved and explicit reopen.
-5. Sort open work by critical, high, medium, low, then numeric ID.
-6. Report totals and breakdowns by status/priority.
-7. Save and reload JSON safely, including unique IDs after restart.
+Each ticket has `id`, `title`, `category`, `urgency`, `affected_users`, `priority`, `status`, and `assigned_to`.
 
-## Collaboration
-Each fellow must implement real Python code and tests on their own branch, author one feature PR, review the partner's PR with at least two substantive observations, and approve before merge. Never commit directly to the shared default branch during implementation. The repo currently uses `master` as its default branch; references to `main` in the challenge guide mean the repository's integration/default branch.
+- Categories: Network, Hardware, Software, Other.
+- Urgency: low, medium, high.
+- Priority: critical (high urgency and >=10 users), otherwise high (high urgency or >=10 users), otherwise medium (medium urgency or >=3 users), otherwise low.
+- Lifecycle: open → in_progress → resolved. Assignment is required to start work; resolved tickets require explicit reopening before modification.
+- Queue: open tickets only, highest priority first, ties by numeric ticket ID.
 
-## Definition of done
-All seven features work through a repeating CLI menu; at least eight meaningful `unittest` tests pass on the integrated default branch; invalid inputs and transitions do not corrupt data; JSON round-trips and IDs remain unique; both approved PRs and authentic AI-learning logs exist; both fellows can demonstrate and defend their own code.
+## Collaboration and delivery
 
-## Documentation and evidence
-Complete `docs/design-decisions.md` and `docs/ai-learning-log.md` during the sprint. Record actual commands/results and PR URLs; never invent test output or review evidence.
+Vejeh implemented the ticket engine, validation, persistence and CLI. Gideon implemented assignment, workflow, priority queue and reporting. The code is currently assembled on `integration/campusflow-reviewed`; **the default `master` branch has not yet received this integrated implementation**.
 
-## Scope boundaries
-No website, GUI, database server, AI model integration, third-party dependencies, authentication, or notifications are required. AI is used to learn and verify, not to calculate ticket priority.
+Before final submission: conduct genuine reciprocal PR reviews and approvals, record at least two substantive observations per review, merge approved work to `master`, rerun the test suite on `master`, complete real individual AI learning logs, and perform a manual demo of the full lifecycle and persistence.
+
+## Documentation
+
+- [Product requirements](PRD.md)
+- [Implementation roadmap](IMPLEMENTATION_ROADMAP.md)
+- [Agent instructions](AGENT.md)
+- [Design decisions](docs/design-decisions.md)
+- [AI learning log](docs/ai-learning-log.md)
+- [Vejeh's ownership](vejehpart.md) and [Gideon's ownership](gideonpart.md)
+
+## Scope
+
+No web interface, external database, authentication, AI inference, or third-party Python libraries are required.
