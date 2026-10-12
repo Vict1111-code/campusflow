@@ -1,86 +1,108 @@
 
 import unittest
 
-from campusflow.workflow import (
-    assign_ticket,
-    change_status,
-    get_open_queue,
-    get_ticket,
-    reopen_ticket,
-)
+from campusflow.reports import get_report
 
 
-def make_ticket(ticket_id, priority="medium",
-                status="open", assigned_to=None):
+def make_ticket(ticket_id, priority="low", status="open"):
+    priority_inputs = {
+        "critical": ("high", 12),
+        "high": ("high", 2),
+        "medium": ("low", 4),
+        "low": ("low", 1),
+    }
+
+    urgency, affected_users = priority_inputs[priority]
+
     return {
         "id": ticket_id,
-        "title": "Example ticket",
-        "category": "technical",
-        "urgency": priority,
+        "title": "Campus support issue",
+        "category": "Network",
+        "urgency": urgency,
+        "affected_users": affected_users,
         "priority": priority,
-        "affected_users": 1,
         "status": status,
-        "assigned_to": assigned_to,
+        "assigned_to": "Alice" if status != "open" else None,
     }
 
 
-class WorkflowTests(unittest.TestCase):
-    def setUp(self):
-        self.tickets = [
-            make_ticket("T010", "critical"),
-            make_ticket("T002", "critical"),
-            make_ticket("T003", "low"),
+class TestTicketReports(unittest.TestCase):
+    def test_empty_report(self):
+        report = get_report([])
+
+        self.assertEqual(report["total"], 0)
+        self.assertEqual(
+            report["by_status"],
+            {"open": 0, "in_progress": 0, "resolved": 0},
+        )
+        self.assertEqual(
+            report["by_priority"],
+            {"critical": 0, "high": 0, "medium": 0, "low": 0},
+        )
+
+    def test_total_ticket_count(self):
+        tickets = [
+            make_ticket("T001"),
+            make_ticket("T002", "high"),
+            make_ticket("T003", "critical"),
         ]
 
-    def test_assign_ticket(self):
-        ticket = assign_ticket(self.tickets, "T002", " Alice ")
-        self.assertEqual(ticket["assigned_to"], "Alice")
+        report = get_report(tickets)
 
-    def test_blank_staff_name(self):
-        with self.assertRaises(ValueError):
-            assign_ticket(self.tickets, "T002", "   ")
+        self.assertEqual(report["total"], 3)
 
-    def test_unknown_ticket(self):
-        with self.assertRaises(KeyError):
-            get_ticket(self.tickets, "T999")
+    def test_counts_tickets_by_status(self):
+        tickets = [
+            make_ticket("T001", status="open"),
+            make_ticket("T002", "high", "in_progress"),
+            make_ticket("T003", "critical", "resolved"),
+            make_ticket("T004", status="open"),
+        ]
 
-    def test_cannot_start_unassigned_ticket(self):
-        with self.assertRaises(ValueError):
-            change_status(self.tickets, "T002", "in_progress")
-
-    def test_valid_status_lifecycle(self):
-        assign_ticket(self.tickets, "T002", "Alice")
-        change_status(self.tickets, "T002", "in_progress")
-        change_status(self.tickets, "T002", "resolved")
+        report = get_report(tickets)
 
         self.assertEqual(
-            get_ticket(self.tickets, "T002")["status"],
-            "resolved",
+            report["by_status"],
+            {"open": 2, "in_progress": 1, "resolved": 1},
         )
 
-    def test_reopen_resolved_ticket(self):
-        ticket = make_ticket("T020", status="resolved")
-        tickets = [ticket]
+    def test_counts_tickets_by_priority(self):
+        tickets = [
+            make_ticket("T001", "critical"),
+            make_ticket("T002", "high"),
+            make_ticket("T003", "medium"),
+            make_ticket("T004", "low"),
+            make_ticket("T005", "low"),
+        ]
 
-        reopen_ticket(tickets, "T020")
-        self.assertEqual(ticket["status"], "open")
-
-    def test_queue_priority_and_numeric_id(self):
-        queue = get_open_queue(self.tickets)
+        report = get_report(tickets)
 
         self.assertEqual(
-            [ticket["id"] for ticket in queue],
-            ["T002", "T010", "T003"],
+            report["by_priority"],
+            {"critical": 1, "high": 1, "medium": 1, "low": 2},
         )
 
-    def test_queue_excludes_non_open_tickets(self):
-        self.tickets[0]["status"] = "resolved"
+    def test_zero_counts_are_included(self):
+        report = get_report([make_ticket("T001", "high")])
 
-        queue = get_open_queue(self.tickets)
+        self.assertEqual(report["by_status"]["resolved"], 0)
+        self.assertEqual(report["by_priority"]["critical"], 0)
+        self.assertEqual(report["by_priority"]["medium"], 0)
 
-        self.assertNotIn("T010", [ticket["id"] for ticket in queue])
+    def test_unknown_status_is_rejected(self):
+        ticket = make_ticket("T001")
+        ticket["status"] = "waiting"
+
+        with self.assertRaises(ValueError):
+            get_report([ticket])
+
+    def test_unknown_priority_is_rejected(self):
+        ticket = make_ticket("T001")
+        ticket["priority"] = "urgent"
+
+        with self.assertRaises(ValueError):
+            get_report([ticket])
 
 
 if __name__ == "__main__":
     unittest.main()
-
